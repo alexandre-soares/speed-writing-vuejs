@@ -3,15 +3,71 @@
     <h1>Speed Writing Test</h1>
     <div class="timer">0</div>
     <div class="container">
-      <div class="quote-display">Quote</div>
-      <textarea class="quote-input" autofocus>Quote</textarea>
+      <div class="quote-display" ref="quoteDisplay"></div>
+      <textarea
+        class="quote-input"
+        autofocus
+        v-model="quoteInput"
+        @input="checkCharacter()"
+      ></textarea>
     </div>
   </div>
 </template>
 
 <script>
 export default {
-  mounted() {}
+  data() {
+    return {
+      API_URL: "http://api.quotable.io/random",
+      quoteInput: null
+    };
+  },
+  mounted() {
+    this.renderNewQuote();
+  },
+  methods: {
+    getRandomQuote() {
+      return fetch(this.API_URL)
+        .then(response => response.json())
+        .then(data => data.content);
+    },
+    async renderNewQuote() {
+      const quote = await this.getRandomQuote();
+      this.$refs.quoteDisplay.innerHTML = "";
+      quote.split("").forEach(character => {
+        const characterSpan = document.createElement("span");
+        characterSpan.innerText = character;
+        this.$refs.quoteDisplay.appendChild(characterSpan);
+      });
+      this.quoteInput = null;
+    },
+    checkCharacter() {
+      console.log(this.quoteInput);
+      const arrayQuote = this.$refs.quoteDisplay.querySelectorAll("span");
+      const arrayValue = this.quoteInput.split("");
+
+      let correct = true;
+      arrayQuote.forEach((characterSpan, index) => {
+        const character = arrayValue[index];
+        if (character == null) {
+          characterSpan.classList.remove("correct");
+          characterSpan.classList.remove("incorrect");
+          correct = false;
+        } else if (character === characterSpan.innerText) {
+          characterSpan.classList.add("correct");
+          characterSpan.classList.remove("incorrect");
+        } else {
+          characterSpan.classList.remove("correct");
+          characterSpan.classList.add("incorrect");
+          correct = false;
+        }
+      });
+
+      if (correct) {
+        this.renderNewQuote();
+      }
+    }
+  }
 };
 </script>
 
@@ -37,6 +93,7 @@ h1 {
 
 .quote-display {
   font-size: 3rem;
+  margin: 4rem 0 2rem;
 }
 
 .quote-input {
@@ -54,5 +111,14 @@ h1 {
 
 .quote-input:focus {
   outline: none;
+}
+
+.correct {
+  color: green;
+}
+
+.incorrect {
+  color: red;
+  text-decoration: line-through;
 }
 </style>
