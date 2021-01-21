@@ -28,12 +28,14 @@ export default {
   padding: 0;
 }
 
-body {
+#app {
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  flex-direction: row;
+  align-items: flex-start;
   justify-content: space-evenly;
   min-height: 100vh;
+  width: 90vw;
+  margin: 5rem auto 0;
   font-family: "Roboto", sans-serif;
 }
 

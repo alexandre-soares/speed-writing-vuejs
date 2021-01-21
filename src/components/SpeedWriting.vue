@@ -1,7 +1,7 @@
 <template>
   <div class="speed-writing">
     <h1>Speed Writing Test</h1>
-    <div class="timer">Timer: {{ this.timer }}</div>
+    <div class="timer">Time: {{ this.timer }}</div>
     <div class="container">
       <div class="quote-display" ref="quoteDisplay"></div>
       <textarea
@@ -12,6 +12,21 @@
       ></textarea>
     </div>
   </div>
+  <div class="log">
+    <h1>Activity Log</h1>
+    <table>
+      <tr>
+        <th>Test</th>
+        <th>Number of Words</th>
+        <th>Time</th>
+      </tr>
+      <tr v-for="(log, index) in logs" :key="index">
+        <td>{{ log.test }}</td>
+        <td>{{ log.numberWords }}</td>
+        <td>{{ log.time }} s</td>
+      </tr>
+    </table>
+  </div>
 </template>
 
 <script>
@@ -19,9 +34,19 @@ export default {
   data() {
     return {
       API_URL: "http://api.quotable.io/random",
+      launchTimer: false,
       quoteInput: null,
       timer: 0,
-      startTime: null
+      index: 1,
+      startTime: null,
+      logs: [
+        {
+          test: "Test 1",
+          numberWords: 60,
+          time: 45
+        }
+      ],
+      words: null
     };
   },
   mounted() {
@@ -35,6 +60,7 @@ export default {
     },
     async renderNewQuote() {
       const quote = await this.getRandomQuote();
+      this.wordCounter(quote);
       this.$refs.quoteDisplay.innerHTML = "";
       quote.split("").forEach(character => {
         const characterSpan = document.createElement("span");
@@ -42,8 +68,14 @@ export default {
         this.$refs.quoteDisplay.appendChild(characterSpan);
       });
       this.quoteInput = null;
+      console.log(this.words);
 
-      this.startTimer();
+      if (this.launchTimer) {
+        this.startTimer();
+      }
+    },
+    wordCounter(str) {
+      return (this.words = str.split(" ").length);
     },
     checkCharacter() {
       const arrayQuote = this.$refs.quoteDisplay.querySelectorAll("span");
@@ -67,6 +99,13 @@ export default {
       });
 
       if (correct) {
+        const result = {
+          test: `Test ${this.index++}`,
+          numberWords: this.words,
+          time: this.timer
+        };
+        this.logs.push(result);
+
         this.renderNewQuote();
         this.timer = 0;
       }
@@ -76,16 +115,25 @@ export default {
       console.log(`start time is ${this.startTime}`);
       setInterval(() => {
         this.timer = this.getTimerTime();
-      }, 1000);
+      }, 100);
     },
     getTimerTime() {
-      return Math.floor((new Date() - this.startTime) / 1000);
+      return ((new Date() - this.startTime) / 1000).toFixed(3);
     }
   }
 };
 </script>
 
 <style>
+.speed-writing {
+  flex: 0 0 50%;
+  text-align: center;
+}
+
+.log {
+  flex: 0 0 40%;
+}
+
 h1 {
   letter-spacing: 2px;
   margin-bottom: 4rem;
@@ -94,7 +142,6 @@ h1 {
 
 .container {
   height: 70vh;
-  width: 50vw;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -134,5 +181,22 @@ h1 {
 .incorrect {
   color: red;
   text-decoration: line-through;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 1.7rem;
+}
+
+td,
+th {
+  border: 1px solid #dddddd;
+  text-align: left;
+  padding: 8px;
+}
+
+tr:nth-child(even) {
+  background-color: #dddddd;
 }
 </style>
