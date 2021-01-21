@@ -1,15 +1,14 @@
 <template>
-  <img alt="Vue logo" src="./assets/logo.png" />
-  <HelloWorld msg="Welcome to Your Vue.js App" />
+  <Speed-writing />
 </template>
 
 <script>
-import HelloWorld from "./components/HelloWorld.vue";
+import SpeedWriting from "./components/SpeedWriting.vue";
 
 export default {
   name: "App",
   components: {
-    HelloWorld
+    SpeedWriting
   }
 };
 </script>
