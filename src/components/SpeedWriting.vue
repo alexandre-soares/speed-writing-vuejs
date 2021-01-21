@@ -9,6 +9,7 @@
         autofocus
         v-model="quoteInput"
         @input="checkCharacter()"
+        @keyup.delete="removeLetterClass()"
       ></textarea>
     </div>
   </div>
@@ -34,19 +35,14 @@ export default {
   data() {
     return {
       API_URL: "http://api.quotable.io/random",
-      launchTimer: false,
+      launchTimer: true,
       quoteInput: null,
       timer: 0,
       index: 1,
       startTime: null,
-      logs: [
-        {
-          test: "Test 1",
-          numberWords: 60,
-          time: 45
-        }
-      ],
-      words: null
+      logs: [],
+      words: null,
+      accuracy: 0
     };
   },
   mounted() {
@@ -68,7 +64,7 @@ export default {
         this.$refs.quoteDisplay.appendChild(characterSpan);
       });
       this.quoteInput = null;
-      console.log(this.words);
+      this.numberTyping = 0;
 
       if (this.launchTimer) {
         this.startTimer();
@@ -78,25 +74,27 @@ export default {
       return (this.words = str.split(" ").length);
     },
     checkCharacter() {
+      this.numberTyping++;
       const arrayQuote = this.$refs.quoteDisplay.querySelectorAll("span");
       const arrayValue = this.quoteInput.split("");
 
-      let correct = true;
-      arrayQuote.forEach((characterSpan, index) => {
-        const character = arrayValue[index];
-        if (character == null) {
-          characterSpan.classList.remove("correct");
-          characterSpan.classList.remove("incorrect");
-          correct = false;
-        } else if (character === characterSpan.innerText) {
-          characterSpan.classList.add("correct");
-          characterSpan.classList.remove("incorrect");
-        } else {
-          characterSpan.classList.remove("correct");
-          characterSpan.classList.add("incorrect");
-          correct = false;
-        }
-      });
+      const index = arrayValue.length - 1;
+
+      let correct = false;
+
+      if (
+        index === arrayQuote.length - 1 &&
+        arrayValue[index] === arrayQuote[index].innerHTML
+      ) {
+        correct = true;
+      }
+      if (arrayValue[index] === arrayQuote[index].innerHTML) {
+        arrayQuote[index].classList.add("correct");
+        arrayQuote[index].classList.remove("incorrect");
+      } else {
+        arrayQuote[index].classList.remove("correct");
+        arrayQuote[index].classList.add("incorrect");
+      }
 
       if (correct) {
         const result = {
@@ -109,6 +107,14 @@ export default {
         this.renderNewQuote();
         this.timer = 0;
       }
+    },
+    removeLetterClass() {
+      const arrayQuote = this.$refs.quoteDisplay.querySelectorAll("span");
+      const arrayValue = this.quoteInput.split("");
+
+      const index = arrayValue.length;
+      arrayQuote[index].classList.remove("correct");
+      arrayQuote[index].classList.remove("incorrect");
     },
     startTimer() {
       this.startTime = new Date();
@@ -128,10 +134,12 @@ export default {
 .speed-writing {
   flex: 0 0 50%;
   text-align: center;
+  margin: 5rem auto 0;
 }
 
 .log {
   flex: 0 0 40%;
+  margin: 5rem auto 0;
 }
 
 h1 {
