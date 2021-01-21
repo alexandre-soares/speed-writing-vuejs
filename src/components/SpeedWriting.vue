@@ -2,14 +2,18 @@
   <div class="speed-writing">
     <h1>Speed Writing Test</h1>
     <div class="timer">Time: {{ this.timer }}</div>
+    <div class="timer">Input Counter: {{ this.inputCounter }}</div>
+    <div class="timer">Wrong Counter: {{ this.wrongInputCounter }}</div>
+    <div class="timer">Accuracy: {{ this.accuracy ? this.accuracy : 0 }}%</div>
     <div class="container">
       <div class="quote-display" ref="quoteDisplay"></div>
       <textarea
         class="quote-input"
         autofocus
         v-model="quoteInput"
-        @input="checkCharacter()"
+        @keyup="checkCharacter($event)"
         @keyup.delete="removeLetterClass()"
+        ref="quoteInput"
       ></textarea>
     </div>
   </div>
@@ -19,11 +23,13 @@
       <tr>
         <th>Test</th>
         <th>Number of Words</th>
+        <th>Accuracy</th>
         <th>Time</th>
       </tr>
       <tr v-for="(log, index) in logs" :key="index">
         <td>{{ log.test }}</td>
         <td>{{ log.numberWords }}</td>
+        <td>{{ log.accuracy }} %</td>
         <td>{{ log.time }} s</td>
       </tr>
     </table>
@@ -36,17 +42,25 @@ export default {
     return {
       API_URL: "http://api.quotable.io/random",
       launchTimer: true,
-      quoteInput: null,
+      quoteInput: "",
       timer: 0,
       index: 1,
       startTime: null,
       logs: [],
       words: null,
-      accuracy: 0
+      inputCounter: 0,
+      wrongInputCounter: 0
     };
   },
   mounted() {
     this.renderNewQuote();
+  },
+  computed: {
+    accuracy() {
+      return Math.floor(
+        ((this.inputCounter - this.wrongInputCounter) * 100) / this.inputCounter
+      );
+    }
   },
   methods: {
     getRandomQuote() {
@@ -73,39 +87,91 @@ export default {
     wordCounter(str) {
       return (this.words = str.split(" ").length);
     },
-    checkCharacter() {
-      this.numberTyping++;
+    resetCounters() {
+      (this.timer = 0), (this.inputCounter = 0), (this.wrongInputCounter = 0);
+    },
+    checkCharacter(e) {
+      console.log("LAUNCH FUNCTION");
+      this.inputCounter++;
+
       const arrayQuote = this.$refs.quoteDisplay.querySelectorAll("span");
       const arrayValue = this.quoteInput.split("");
+      // CHECK IF USER PRESSED BACKSPACE
 
       const index = arrayValue.length - 1;
 
-      let correct = false;
+      let specialChars = false;
 
+      if (
+        e.key === "Backspace" ||
+        e.key === "Shift" ||
+        e.key === "Control" ||
+        e.key === "Alt" ||
+        e.key === "" ||
+        e.key === "Meta" ||
+        e.key === "ArrowLeft" ||
+        e.key === "ArrowRight" ||
+        e.key === "ArrowUp" ||
+        e.key === "ArrowDown"
+      ) {
+        this.inputCounter = this.inputCounter - 1;
+        specialChars = true;
+      }
+
+      let correct = false;
+      arrayQuote.forEach((characterSpan, index) => {
+        const character = arrayValue[index];
+        if (character == null) {
+          characterSpan.classList.remove("correct");
+          characterSpan.classList.remove("incorrect");
+          // correct = false;
+        } else if (character === characterSpan.innerText) {
+          characterSpan.classList.add("correct");
+          characterSpan.classList.remove("incorrect");
+        } else {
+          characterSpan.classList.remove("correct");
+          characterSpan.classList.add("incorrect");
+          // correct = false;
+        }
+      });
+
+      if (specialChars) {
+        console.log("special char");
+      } else {
+        if (arrayValue[index] === arrayQuote[index].innerHTML) {
+          console.log("special char");
+        } else {
+          this.wrongInputCounter++;
+        }
+      }
+
+      console.log("before test");
       if (
         index === arrayQuote.length - 1 &&
         arrayValue[index] === arrayQuote[index].innerHTML
       ) {
+        console.log("done");
         correct = true;
-      }
-      if (arrayValue[index] === arrayQuote[index].innerHTML) {
-        arrayQuote[index].classList.add("correct");
-        arrayQuote[index].classList.remove("incorrect");
       } else {
-        arrayQuote[index].classList.remove("correct");
-        arrayQuote[index].classList.add("incorrect");
+        console.log("end but false");
+        correct = false;
       }
 
+      console.log(`correct is ${correct}`);
       if (correct) {
+        console.log("correct");
         const result = {
           test: `Test ${this.index++}`,
           numberWords: this.words,
-          time: this.timer
+          time: this.timer,
+          accuracy: Math.floor(
+            ((this.inputCounter - this.wrongInputCounter) * 100) /
+              this.inputCounter
+          )
         };
         this.logs.push(result);
-
+        this.resetCounters();
         this.renderNewQuote();
-        this.timer = 0;
       }
     },
     removeLetterClass() {
@@ -113,6 +179,7 @@ export default {
       const arrayValue = this.quoteInput.split("");
 
       const index = arrayValue.length;
+
       arrayQuote[index].classList.remove("correct");
       arrayQuote[index].classList.remove("incorrect");
     },

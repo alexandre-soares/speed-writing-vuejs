@@ -48,6 +48,13 @@ export default {
   margin: auto;
 }
 
+@media only screen and (max-width: 700px) {
+  .app {
+    flex-direction: column;
+    margin: 5rem auto;
+  }
+}
+
 html {
   font-size: 62.5%;
 }
