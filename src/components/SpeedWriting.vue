@@ -1,7 +1,7 @@
 <template>
   <div class="speed-writing">
     <h1>Speed Writing Test</h1>
-    <div class="timer">0</div>
+    <div class="timer">Timer: {{ this.timer }}</div>
     <div class="container">
       <div class="quote-display" ref="quoteDisplay"></div>
       <textarea
@@ -19,7 +19,9 @@ export default {
   data() {
     return {
       API_URL: "http://api.quotable.io/random",
-      quoteInput: null
+      quoteInput: null,
+      timer: 0,
+      startTime: null
     };
   },
   mounted() {
@@ -40,9 +42,10 @@ export default {
         this.$refs.quoteDisplay.appendChild(characterSpan);
       });
       this.quoteInput = null;
+
+      this.startTimer();
     },
     checkCharacter() {
-      console.log(this.quoteInput);
       const arrayQuote = this.$refs.quoteDisplay.querySelectorAll("span");
       const arrayValue = this.quoteInput.split("");
 
@@ -65,7 +68,18 @@ export default {
 
       if (correct) {
         this.renderNewQuote();
+        this.timer = 0;
       }
+    },
+    startTimer() {
+      this.startTime = new Date();
+      console.log(`start time is ${this.startTime}`);
+      setInterval(() => {
+        this.timer = this.getTimerTime();
+      }, 1000);
+    },
+    getTimerTime() {
+      return Math.floor((new Date() - this.startTime) / 1000);
     }
   }
 };
